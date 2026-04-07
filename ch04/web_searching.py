@@ -1,9 +1,9 @@
-from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
+from duckduckgo_search import DDGS
 from typing import List
 
 def web_search(
     web_query: str, 
     num_results: int) -> List[str]:
-    return [r["link"] 
-        for r in DuckDuckGoSearchAPIWrapper().results(
-            web_query, num_results)]
+    with DDGS() as ddgs:
+        results = ddgs.text(web_query, max_results=num_results)
+        return [r['href'] for r in results]
