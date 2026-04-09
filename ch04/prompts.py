@@ -97,14 +97,13 @@ Information:
 
 Using the above information, answer the following question or topic: "{user_question}" in a detailed report -- \
 The report should focus on the answer to the question, should be well structured, informative, \
-in depth, with facts and numbers if available and a minimum of 1,200 words.
+and in depth, with facts and numbers if available.
 
-You should strive to write the report as long as you can using all relevant and necessary information provided.
+Keep the report concise and readable. Prefer 5-8 short sections with clear headings.
 You must write the report with markdown syntax.
-You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions.
+Base your conclusions only on the given information. Do not invent facts.
 Write all used source urls at the end of the report, and make sure to not add duplicated sources, but only one reference for each.
-You must write the report in apa format.
-Please do your best, this is very important to my career.""" 
+Do not use APA formatting.""" 
 
 RESEARCH_REPORT_PROMPT_TEMPLATE = PromptTemplate.from_template(
     template=RESEARCH_REPORT_INSTRUCTIONS

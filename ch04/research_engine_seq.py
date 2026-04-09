@@ -11,7 +11,7 @@ from prompts import (
 
 NUM_SEARCH_QUERIES = 2
 NUM_SEARCH_RESULTS_PER_QUERY = 3
-RESULT_TEXT_MAX_CHARACTERS = 10000
+RESULT_TEXT_MAX_CHARACTERS = 2000
 question = 'What can I see and do in the Spanish town of Astorga?'
 
 ###
@@ -22,6 +22,11 @@ assistant_selection_prompt = ASSISTANT_SELECTION_PROMPT_TEMPLATE.format(
     user_question=question)
 assistant_instructions = llm.invoke(assistant_selection_prompt)
 assistant_instructions_dict = to_obj(assistant_instructions.content)
+if "assistant_instructions" not in assistant_instructions_dict:
+    raise ValueError(
+        "Could not parse assistant selection response as the expected JSON. "
+        f"Raw model output: {assistant_instructions.content}"
+    )
 
 # generate serach queries
 web_search_prompt = WEB_SEARCH_PROMPT_TEMPLATE.format(
@@ -33,6 +38,11 @@ web_search_prompt = WEB_SEARCH_PROMPT_TEMPLATE.format(
 web_search_queries = llm.invoke(web_search_prompt)
 web_search_queries_list = to_obj(
     web_search_queries.content.replace('\n', ''))
+if not isinstance(web_search_queries_list, list):
+    raise ValueError(
+        "Could not parse web search queries as the expected JSON list. "
+        f"Raw model output: {web_search_queries.content}"
+    )
 
 # find all the search result urls: NUM_SEARCH_QUERIES x NUM_SEARCH_RESULTS_PER_QUERY
 searches_and_result_urls = [{
@@ -68,7 +78,7 @@ for rt in result_text_list:
     text_summary = llm.invoke(summary_prompt)
 
     result_text_summary_list.append({
-        'text_summary': text_summary,
+        'text_summary': text_summary.content,
         'result_url': rt['result_url'],
         'search_query': rt['search_query']})
 
@@ -86,7 +96,8 @@ research_report_prompt = RESEARCH_REPORT_PROMPT_TEMPLATE.format(
     user_question=question
 )
 research_report = llm.invoke(research_report_prompt)
+research_report_text = research_report.content
 
 print(f'stringified_summary_list={stringified_summary_list}')
 print(f'merged_result_summaries={appended_result_summaries}')
-print(f'research_report={research_report}')
+print(f'research_report={research_report_text}')

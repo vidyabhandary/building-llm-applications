@@ -1,5 +1,6 @@
 langchain==1.0.3
 langchain-google-genai
+langchain-openai
 langchain-community==0.4.1
 python-dotenv
 requests==2.32.5
