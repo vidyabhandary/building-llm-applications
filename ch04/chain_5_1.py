@@ -8,7 +8,11 @@ from chain_3_1 import search_result_urls_chain
 from chain_4_1 import search_result_text_and_summary_chain
 
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableLambda
+from langchain_core.runnables import RunnableLambda, RunnableParallel
+
+extract_user_question = RunnableLambda(
+    lambda x: x.get('user_question', '') if isinstance(x, dict) else x
+)
 
 search_and_summarization_chain = (
     search_result_urls_chain 
@@ -21,13 +25,39 @@ search_and_summarization_chain = (
 )
 
 web_research_chain = (
-    assistant_instructions_chain 
-    | web_searches_chain 
-    | search_and_summarization_chain.map() # parallelize for each web search
+    RunnableParallel(
+        {
+            'original_question': extract_user_question,
+            'assistant_input': extract_user_question | assistant_instructions_chain
+        }
+    )
+    | RunnableParallel(
+        {
+            'original_question': lambda x: x['original_question'],
+            'web_searches': RunnableLambda(
+                lambda x: x['assistant_input']
+            ) | web_searches_chain
+        }
+    )
+    | RunnableParallel(
+        {
+            'original_question': lambda x: x['original_question'],
+            'search_summaries': RunnableLambda(
+                lambda x: x['web_searches']
+            ) | search_and_summarization_chain.map() # parallelize for each web search
+        }
+    )
     | RunnableLambda(lambda x:
-       {
-           'research_summary': '\n\n'.join([i['summary'] for i in x]),
-           'user_question': x[0]['user_question'] if len(x) > 0 else ''
-        })
+        {
+            'research_summary': '\n\n'.join(
+                [i['summary'] for i in x['search_summaries']]
+            ),
+            'user_question': (
+                x['search_summaries'][0]['user_question']
+                if len(x['search_summaries']) > 0
+                else x['original_question']
+            )
+        }
+    )
     | RESEARCH_REPORT_PROMPT_TEMPLATE | get_llm() | StrOutputParser()
 )
