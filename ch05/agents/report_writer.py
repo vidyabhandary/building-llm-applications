@@ -16,9 +16,11 @@ def write_research_report(state: Dict[str, Any]) -> Dict[str, Any]:
     )
     
     # Get the LLM response
+    print("Writing final research report...")
     llm = get_llm()
     response = llm.invoke(prompt)
     report = response.content
+    print("Finished writing final research report.")
     
     # Return the updated state
     return {"final_report": report}

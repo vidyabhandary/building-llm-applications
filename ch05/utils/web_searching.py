@@ -1,9 +1,13 @@
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
-from typing import List, Dict, Any
+from typing import List
 import time
 import random
 import requests
+import os
+from dotenv import load_dotenv
 from duckduckgo_search.exceptions import DuckDuckGoSearchException
+
+load_dotenv()
 
 # Create a singleton instance of the DuckDuckGoSearchAPIWrapper to reuse
 _ddg_instance = None
@@ -30,6 +34,28 @@ def web_search(web_query: str, num_results: int) -> List[str]:
     Returns:
         List of URLs from search results
     """
+    tavily_api_key = os.getenv("TAVILY_API_KEY")
+    if tavily_api_key:
+        try:
+            response = requests.post(
+                "https://api.tavily.com/search",
+                json={
+                    "api_key": tavily_api_key,
+                    "query": web_query,
+                    "max_results": num_results,
+                    "search_depth": "basic",
+                },
+                timeout=30,
+            )
+            response.raise_for_status()
+            data = response.json()
+            urls = [r["url"] for r in data.get("results", []) if "url" in r]
+            if urls:
+                return urls
+            print(f"Tavily returned no results for query: {web_query}")
+        except Exception as e:
+            print(f"Tavily search failed: {str(e)}")
+
     global _last_request_time
     
     # Implement rate limiting

@@ -116,4 +116,12 @@ if __name__ == "__main__":
     # Example usage
     question = "What can you tell me about Astorga's roman spas"
     report = run_research(question)
-    print(report)
+
+    if not report:
+        print("No report was returned by the model.")
+    else:
+        with open("report.md", "w", encoding="utf-8") as f:
+            f.write(report)
+
+        print("Report saved to report.md")
+        print(report)

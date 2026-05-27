@@ -4,11 +4,27 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
 
 def get_llm():
-    return ChatOpenAI(openai_api_key=openai_api_key,
-                 model_name="gpt-5-nano")
+    openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+
+    if openrouter_api_key:
+        return ChatOpenAI(
+            api_key=openrouter_api_key,
+            base_url=os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+            model=os.getenv("OPENROUTER_MODEL", "openrouter/free"),
+        )
+
+    if openai_api_key:
+        return ChatOpenAI(
+            api_key=openai_api_key,
+            model=os.getenv("OPENAI_MODEL", "gpt-5-nano"),
+        )
+
+    raise ValueError(
+        "Set OPENROUTER_API_KEY or OPENAI_API_KEY in your environment."
+    )
 
 # Define typed dictionaries for state handling
 class AssistantInfo(TypedDict):
